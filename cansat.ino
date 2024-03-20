@@ -9,10 +9,16 @@ BMP280 bmp;
 
 const int lm35_pin = A0;
 
+const int moisture1_pin = A3;
+const int moisture2_pin = A4;
+
 const int chipSelect = 11;
 int counter = 1;
 bool led_state = false;
 const int led_pin = 13;
+
+float del;
+float pt, pp=0;
 
 Radio radio(Pins::Radio::ChipSelect,
             Pins::Radio::DIO0,
@@ -33,6 +39,8 @@ float lm35_raw_to_temperature(int raw)
 
 void setup() 
 {
+  pinMode(moisture1_pin,INPUT);
+  pinMode(moisture2_pin,INPUT);
   SerialUSB.begin(9600);
   while (!Serial) {
     ; 
@@ -69,18 +77,34 @@ void loop()
 {
   double T, P;
   int raw=analogRead(lm35_pin);
+  float m1=analogRead(moisture1_pin);
+  float m2=analogRead(moisture2_pin);
   float temperature=lm35_raw_to_temperature(raw);
+            
   String dataString = "";
   
   bmp.measureTemperatureAndPressure(T,P);
-  dataString +=String(counter);
-  dataString += (". ");
-  dataString += String(temperature);
+  dataString+= String(counter);
+  dataString+= (". ");
+  dataString+= String(temperature);
   dataString+= (" deg C, ");
   dataString+= String(P);
   dataString+= (" hPa, ");
   dataString+= String(T);
   dataString+= (" deg C");
+
+  pt=Float(P);
+  del=abs(pt-pp)
+
+  if(del<=0.1)
+  {
+    dataString+= (", ");
+    dataString+= String(m1);
+    dataString+= (" %, ");
+    dataString+= String(m2);
+    dataString+= (" %");
+  }
+              
 
   File dataFile = SD.open("dane.txt", FILE_WRITE);
   if (dataFile) 
@@ -110,10 +134,22 @@ void loop()
   frame.print(T);
   frame.print(" deg C");
 
+  if(del<=0.1)
+  {
+    //frame.print(", ");
+    frame.print(" Moisture_1: ");
+    frame.print(m1);
+    frame.print(" %");
+    frame.print(" Moisture_2: ");
+    frame.print(m2);
+    frame.print(" %");
+  }
+
   radio.transmit(frame);
   SerialUSB.println(frame);
   frame.clear();
   counter++;
+  pp=pt;
 
   delay(1000);
 }
