@@ -9,16 +9,16 @@ BMP280 bmp;
 
 const int lm35_pin = A0;
 
-const int moisture1_pin = A3;
-const int moisture2_pin = A4;
+const int moisture1_pin = A2; //na prawo od złącza programowania
+const int moisture2_pin = A3; //na lewo od złącza programowania
 
 const int chipSelect = 11;
 int counter = 1;
 bool led_state = false;
 const int led_pin = 13;
 
-float del;
-float pt, pp=0;
+//float del;
+//float pt, pp=0;
 
 Radio radio(Pins::Radio::ChipSelect,
             Pins::Radio::DIO0,
@@ -42,6 +42,7 @@ void setup()
   pinMode(moisture1_pin,INPUT);
   pinMode(moisture2_pin,INPUT);
   SerialUSB.begin(9600);
+
   while (!Serial) {
     ; 
   }
@@ -79,8 +80,7 @@ void loop()
   int raw=analogRead(lm35_pin);
   float m1=analogRead(moisture1_pin);
   float m2=analogRead(moisture2_pin);
-  float temperature=lm35_raw_to_temperature(raw);
-            
+  float temperature=lm35_raw_to_temperature(raw);     
   String dataString = "";
   
   bmp.measureTemperatureAndPressure(T,P);
@@ -93,17 +93,17 @@ void loop()
   dataString+= String(T);
   dataString+= (" deg C");
 
-  pt=Float(P);
-  del=abs(pt-pp)
+  //pt=float(P);
+  //del=abs(pt-pp);
 
-  if(del<=0.1)
-  {
+  //if(del<=0.1)
+  //{
     dataString+= (", ");
     dataString+= String(m1);
     dataString+= (" %, ");
     dataString+= String(m2);
     dataString+= (" %");
-  }
+  //}
               
 
   File dataFile = SD.open("dane.txt", FILE_WRITE);
@@ -112,7 +112,7 @@ void loop()
     dataFile.println(dataString);
     dataFile.flush();
     dataFile.close();
-    SerialUSB.println(dataString);
+    //SerialUSB.println(dataString);
   }
   else 
   {
@@ -124,32 +124,36 @@ void loop()
 
   frame.print(counter);
   frame.print(". ");
-  frame.print(" Temperature: ");
+  frame.print(" T1: ");
   frame.print(temperature);
-  frame.print(" deg C");
-  frame.print(" Pressure: ");
+  frame.print(" deg C ");
+  frame.print(" P: ");
   frame.print(P);
-  frame.print(" hPa");
-  frame.print(" Temperature: ");
+  frame.print(" hPa ");
+  frame.print(" T2: ");
   frame.print(T);
-  frame.print(" deg C");
+  frame.print(" deg C ");
 
-  if(del<=0.1)
-  {
-    //frame.print(", ");
-    frame.print(" Moisture_1: ");
+  //delay(500);
+
+  //if(del<=0.1)
+  //{
+    //frame.print(counter);
+    //frame.print(". ");
+    frame.print(" MP: ");
     frame.print(m1);
-    frame.print(" %");
-    frame.print(" Moisture_2: ");
+    //frame.print(" %");
+    frame.print(" ML: ");
     frame.print(m2);
-    frame.print(" %");
-  }
+    //frame.print(" %");
+  //}
 
   radio.transmit(frame);
   SerialUSB.println(frame);
   frame.clear();
+  
   counter++;
-  pp=pt;
+  //pp=pt;
 
   delay(1000);
 }
