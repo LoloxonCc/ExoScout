@@ -17,8 +17,8 @@ int counter = 1;
 bool led_state = false;
 const int led_pin = 13;
 
-//float del;
-//float pt, pp=0;
+float del;
+float pt, pp=0;
 
 Radio radio(Pins::Radio::ChipSelect,
             Pins::Radio::DIO0,
@@ -93,17 +93,15 @@ void loop()
   dataString+= String(T);
   dataString+= (" deg C");
 
-  //pt=float(P);
-  //del=abs(pt-pp);
+  pt=float(P);
+  del=abs(pt-pp);
 
-  //if(del<=0.1)
-  //{
+  if(del<=0.5)
+  {
     dataString+= (", ");
     dataString+= String(m1);
-    dataString+= (" %, ");
     dataString+= String(m2);
-    dataString+= (" %");
-  //}
+  }
               
 
   File dataFile = SD.open("dane.txt", FILE_WRITE);
@@ -134,26 +132,20 @@ void loop()
   frame.print(T);
   frame.print(" deg C ");
 
-  //delay(500);
-
-  //if(del<=0.1)
-  //{
-    //frame.print(counter);
-    //frame.print(". ");
+  if(del<=0.5)
+  {
     frame.print(" MP: ");
     frame.print(m1);
-    //frame.print(" %");
     frame.print(" ML: ");
     frame.print(m2);
-    //frame.print(" %");
-  //}
+  }
 
   radio.transmit(frame);
   SerialUSB.println(frame);
   frame.clear();
   
   counter++;
-  //pp=pt;
+  pp=pt;
 
   delay(1000);
 }
